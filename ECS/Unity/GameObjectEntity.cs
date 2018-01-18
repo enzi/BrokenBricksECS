@@ -25,6 +25,7 @@ namespace ECS {
 
         public UnityEvent onInitialized;
 
+		private Dictionary<Type, Type> cachedComponentWrapperType = new Dictionary<Type, Type>();
         private Dictionary<Type, ComponentWrapper> componentsToDelete = new Dictionary<Type, ComponentWrapper>();
         
         void AddECSComponents() {
@@ -97,9 +98,20 @@ namespace ECS {
                 }
                 return;
             }
-            Type componentWrapperType = componentType.Assembly.GetTypes()
-            .Where(field => field.BaseType != null && field.BaseType.GetGenericArguments().Where(genericArgType => genericArgType == componentType).Any())
-            .FirstOrDefault();
+			
+            Type componentWrapperType = null;
+            if (cachedComponentWrapperType.ContainsKey(componentType))
+            {
+                componentWrapperType = cachedComponentWrapperType[componentType];
+            }
+            else
+            {
+                componentWrapperType = componentType.Assembly.GetTypes()
+                .Where(field => field.BaseType != null && field.BaseType.GetGenericArguments().Where(genericArgType => genericArgType == componentType).Any())
+                .FirstOrDefault();
+
+                cachedComponentWrapperType.Add(componentType, componentWrapperType);
+            }
 
            if (componentWrapperType != null) {
                
